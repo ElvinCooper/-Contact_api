@@ -1,97 +1,59 @@
-from flask import Flask, request
-from flask import jsonify
-import sqlite3
+from flask import Flask, request, jsonify
+import re, os
+import sqlite3, requests
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String
+
 
 app = Flask(__name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'mis_contactos.db')
 
 
-# ENDPOINT PARA CONSULTAR LOS REGISTROS DE LA TABLA
-@app.route('/contactos' , methods=['GET'])
-def get_contactos():    
-    try:
-        with sqlite3.connect('api_contacts.db') as conn:
-            conn.row_factory = sqlite3.Row # para convertir las filas en diccionarios
-            cursor = conn.cursor()
-            cursor.execute("select id, nombre, email from  CONTACTS")
-            query = cursor.fetchall()
-
-            if query:
-                # convertir cada fila a un dicionario usando row_factory
-                contactos = [dict(row) for row in query]
-                
-                for datos in query:
-                    print(datos)                    
-                                
-                return jsonify(contactos)
-            else:
-                return jsonify({"mensaje": "No se encontraron registros."}), 400
-            
-    except sqlite3.Error as e:
-        return jsonify({"Error": e}), 500
+db  = SQLAlchemy(app)
 
 
-# ENDPOINT PARA CONSULTAR UN REGISTROS CON SU ID
-@app.route('/consultar/<int:id>', methods=['GET'])
-def consultar_contacto(id: int):
-    try:
-        with sqlite3.connect('api_contacts.db') as conn:
-            conn.row_factory = sqlite3.Row # para convertir las filas en diccionarios
-            cursor = conn.cursor()
-            cursor.execute(f"select * from  CONTACTS WHERE ID ={id}")
-            query = cursor.fetchall()
 
-            if query:
-                # convertir cada fila a un dicionario usando row_factory
-                contactos = [dict(row) for row in query]
-                
-                return jsonify(contactos) 
-            else:
-                return jsonify({"mensaje": "No se encontraron registros con este id."}), 400
-               
-    except sqlite3.Error as e:
-        return jsonify({"Error": e}), 500
+class Contacto(db.Model):
+    __tablename__ = 'mis_contactos'
+    id     = Column(Integer, primary_key=True)
+    nombre = Column(String, nullable=False)
+    email  = Column(String, nullable=False)
+
+@app.cli.command('db_create')
+def db_create():
+    db.create_all()
+    print('Base de datos creada exitosamente !')
+
+
+@app.cli.command('db_drop')
+def db_drop():
+    db.drop_all()
+    print('Base de datos eliminada')
+
+
+# Definicion de los datos a partir del modelo Contacto
+
+@app.cli.command('db.seed')
+def db_seed():
+    contacto1 = Contacto(id=None,
+                         nombre='Andrew',
+                         email='andrew@gmail.com')
     
+    contacto2 = Contacto(id=None,
+                         nombre='Elvin',
+                         email='elvin@gmail.com')
+    
+    contacto3 = Contacto(id=None,
+                         nombre='Katherin',
+                         email='katherin@gmail.com')
 
+    db.session.add(contacto1)
+    db.session.add(contacto2)
+    db.session.add(contacto3)
 
-# ENDPOINTS PARA INSERTAR UN NUEVO REGISTRO A LA TABLA CONTACTS
-@app.route('/insert/<string:nombre>/<string:email>', methods=['POST'])
-def insertar( nombre : str, email: str):
-    try:             
-        # validar si existe el nombre e email
-        if not nombre or not email:
-            return jsonify({"Error:": "Faltan parametros (nombre y email)"}), 400
-        
-        
-        #conectando a la base de datos
-        with sqlite3.connect('api_contacts.db') as conn:
-            conn.row_factory = sqlite3.Row # para convertir las filas en diccionarios
-            cursor = conn.cursor()
-
-            #verificar si existe un contacto con el mismo email
-            cursor.execute("SELECT 1 FROM CONTACTS WHERE email = ?", (email,))
-            if cursor.fetchone() is not None:
-                return jsonify({"Error": "Ya existe un usuario con ese email"}), 400
-            
-             # Insertar nuevo registro
-            cursor.execute("INSERT INTO CONTACTS (nombre, email) VALUES (?, ?) ", (nombre, email))
-            conn.commit() 
-
-            #obtener nuevo id 
-            nuevo_id = cursor.lastrowid
-
-            return jsonify({
-                "mensaje": "Contacto agregado correctamente",
-                "id": nuevo_id,
-                "nombre": nombre,
-                "email": email
-            }), 201          
-               
-    except sqlite3.OperationalError as e:
-        return jsonify({"Error": str(e)}), 500
-
-    except Exception as err:
-        return jsonify({"Error": str(err)}), 500
-
+    db.session.commit()
+    print('Base de datos poblada')
 
 
 if __name__ == '__main__':
