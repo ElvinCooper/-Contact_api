@@ -3,6 +3,7 @@ import re, os
 import sqlite3, requests
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String
+from flask_marshmallow import Marshmallow
 
 
 app = Flask(__name__)
@@ -11,6 +12,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'mi
 
 
 db  = SQLAlchemy(app)
+ma = Marshmallow(app)
 
 
 
@@ -19,6 +21,13 @@ class Contacto(db.Model):
     id     = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
     email  = Column(String, nullable=False)
+
+# definicion del schema marshmallow    
+class ContactoSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Contacto
+        load_instance = True
+
 
 @app.cli.command('db_create')
 def db_create():
@@ -54,6 +63,57 @@ def db_seed():
 
     db.session.commit()
     print('Base de datos poblada')
+
+
+
+
+# Enpoint para consultar todos los datos de la tabla de contactos
+@app.route('/contactos' , methods=['GET'])
+def contactos():
+    list_contacts = Contacto.query.all()
+    contacto_schema = ContactoSchema(many=True)
+    
+    return jsonify(contacto_schema.dump(list_contacts))
+
+
+
+# Endpoint para consultar un contacto con su id
+@app.route('/micontacto/<int:id>' , methods=['GET'])
+def get_contacto(id):
+    contacto = Contacto.query.get_or_404(id)
+        
+    contacto_schema = ContactoSchema()
+    return jsonify(contacto_schema.dump(contacto))
+
+#Enpoint para insertar un contacto
+@app.route('/insertar/<string:nombre>/<string:email>', methods=['POST'])
+def put_contact(nombre: str, email: str): 
+    data = request.get_json(silent=True)
+    # nombre = request.json.get(nombre)
+    # email  = request.json.get(email) 
+
+    if not nombre or not email:
+        return jsonify({"Mensaje": "Faltan parametros (nombre y/o email)"}), 400
+    
+    # Validar formato de email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return jsonify({"Error": "Formato de email inválido"}), 400
+
+    
+    #email = data.get("email")
+    if Contacto.query.filter_by(email=email).first():
+        return jsonify({"Mensaje": "Ya existe un contacto con este email"}), 400
+
+    nuevo_contacto = Contacto(nombre = nombre,
+                              email  = email)
+    
+    db.session.add(nuevo_contacto)
+    db.session.commit()
+
+    contacto_schema = ContactoSchema()
+    return jsonify(contacto_schema.dump(nuevo_contacto)), 201
+    
+    
 
 
 if __name__ == '__main__':
