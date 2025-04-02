@@ -29,6 +29,9 @@ class ContactoSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
 
 
+contacto_schema = ContactoSchema()  # esquema para la serializacion de los datos
+
+
 @app.cli.command('db_create')
 def db_create():
     db.create_all()
@@ -85,19 +88,19 @@ def get_contacto(id):
     contacto_schema = ContactoSchema()
     return jsonify(contacto_schema.dump(contacto))
 
+
+
 #Enpoint para insertar un contacto
 @app.route('/insertar/<string:nombre>/<string:email>', methods=['POST'])
 def put_contact(nombre: str, email: str): 
     data = request.get_json(silent=True)
-    # nombre = request.json.get(nombre)
-    # email  = request.json.get(email) 
 
     if not nombre or not email:
         return jsonify({"Mensaje": "Faltan parametros (nombre y/o email)"}), 400
     
     # Validar formato de email
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return jsonify({"Error": "Formato de email inválido"}), 400
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return jsonify({"Error": "Formato de email inválido"}), 400
 
     
     #email = data.get("email")
@@ -110,10 +113,30 @@ def put_contact(nombre: str, email: str):
     db.session.add(nuevo_contacto)
     db.session.commit()
 
-    contacto_schema = ContactoSchema()
+    #contacto_schema = ContactoSchema()
     return jsonify(contacto_schema.dump(nuevo_contacto)), 201
     
+
+
+# Endpoint para actualizar un contacto con su id
+@app.route('/update/<int:id>' , methods=['PUT'])
+def update_contacto(id, nombre, email):
+    contacto = Contacto.query.get_or_404(id)
+
+    data = request.get.json()
+    if 'name' in data:
+        contacto.name = data['name']
     
+    if 'email' in data:
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return jsonify({"Error": "Formato de email inválido"}), 400
+        
+        contacto.email = data['email']
+
+    db.session.commit()
+    return contacto_schema.jsonify(contacto)
+
+    #return jsonify(contacto_schema.dump(contacto))
 
 
 if __name__ == '__main__':
