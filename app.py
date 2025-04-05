@@ -1,36 +1,19 @@
 from flask import Flask, request, jsonify
-import re, os
+from config import Config
+from models import db, Contacto
 import sqlite3, requests
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String
-from flask_marshmallow import Marshmallow
+from schemas import ContactoSchema
 from marshmallow.exceptions import ValidationError
 
 
-
 app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'mis_contactos.db')
+
+app.config.from_object(Config)
+db.init_app(app)
 
 
-db  = SQLAlchemy(app)
-ma = Marshmallow(app)
-
-
-
-class Contacto(db.Model):
-    __tablename__ = 'mis_contactos'
-    id     = Column(Integer, primary_key=True)
-    nombre = Column(String, nullable=False)
-    email  = Column(String, nullable=False)
-
-# definicion del schema marshmallow    
-class ContactoSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Contacto
-        #load_instance = True
-        nombre = ma.Str(required=True, validate=lambda n: 1 <= len(n) <= 80)  # Cambiar "name" por "nombre"
-        email = ma.Email(required=True)
+contacto_schema = ContactoSchema()
+contacts_schema = ContactoSchema(many=True)
 
 
 @app.cli.command('db_create')
@@ -69,56 +52,55 @@ def db_seed():
     print('Base de datos poblada')
 
 
+# Enpoint inicial  
+@app.route('/')
+def index():
+    return jsonify({"message": "API de Contactos activa"}), 200
+
 
 
 # Enpoint para consultar todos los datos de la tabla de contactos
 @app.route('/contactos' , methods=['GET'])
 def contactos():
-    list_contacts = Contacto.query.all()
-    contacto_schema = ContactoSchema(many=True)
+    list_contacts = Contacto.query.all()    
     
-    return jsonify(contacto_schema.dump(list_contacts))
+    return jsonify(contacts_schema.dump(list_contacts))
 
 
 
 # Endpoint para consultar un contacto con su id
-@app.route('/micontacto/<int:id>' , methods=['GET'])
+@app.route('/contactos/<int:id>' , methods=['GET'])
 def get_contacto(id):
     contacto = Contacto.query.get_or_404(id)
-        
-    contacto_schema = ContactoSchema()
-    return jsonify(contacto_schema.dump(contacto))
+           
+    return jsonify(contacto_schema.dump(contacto)), 200
 
-#Enpoint para insertar un contacto
-@app.route('/insertar/<string:nombre>/<string:email>', methods=['POST'])
-def put_contact(nombre: str, email: str): 
-    data = request.get_json(silent=True)
 
-    if not nombre or not email:
-        return jsonify({"Mensaje": "Faltan parametros (nombre y/o email)"}), 400
+
+ # Enpoint para insertar un contacto
+@app.route('/contactos', methods=['POST'])
+def crear_contacto():
+    try:
+        json_data = request.get_json()
+        data = contacto_schema.load(json_data)
+
+        if Contacto.query.filter_by(email=data['email']).first():
+            return jsonify({"mensaje": "Ya existe un contacto con este email"}), 400
+
+        nuevo_contacto = Contacto(**data)
+        db.session.add(nuevo_contacto)
+        db.session.commit()
+
+        return jsonify(contacto_schema.dump(nuevo_contacto)), 201
+    except ValidationError as e:
+        return jsonify({"error": e.messages}), 400
+
     
-    # Validar formato de email
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-        return jsonify({"Error": "Formato de email inválido"}), 400
 
-    
-    #email = data.get("email")
-    if Contacto.query.filter_by(email=email).first():
-        return jsonify({"Mensaje": "Ya existe un contacto con este email"}), 400
-
-    nuevo_contacto = Contacto(nombre = nombre,
-                              email  = email)
-    
-    db.session.add(nuevo_contacto)
-    db.session.commit()
-
-    contacto_schema = ContactoSchema()
-    return jsonify(contacto_schema.dump(nuevo_contacto)), 201
-    
 
 # Endpoint para actualizar un recurso en la bd
-@app.route('/update/<int:id>', methods=['PUT'])   
-def update_contact(id):
+@app.route('/contactos/<int:id>', methods=['PUT'])   
+def actualizar_contacto(id):
     contacto = Contacto.query.get_or_404(id)
 
     try:
@@ -126,15 +108,11 @@ def update_contact(id):
         if 'nombre' in data:
             contacto.nombre = data['nombre']
         if 'email' in data:
-        
-            if not re.match(r"[^@]+@[^@]+\.[^@]+", data['email']):
-                return jsonify({"Error": "Formato de email inválido"}), 400
-
             contacto.email = data['email']   
 
         db.session.commit()
-        contacto_schema = ContactoSchema()
-        return jsonify(contacto_schema.dump(contacto))
+        
+        return jsonify(contacto_schema.dump(contacto))                 #jsonify(contacto_schema.dump(contacto))
     except ValidationError as e:
         return jsonify({"Error": e.messages}), 400
     except Exception as err:
@@ -143,18 +121,13 @@ def update_contact(id):
 
 
 # ENDPOINT PARA ELIMINAR UN RECURSO DE LA BD
-@app.route('/delete/<int:id>', methods=['DELETE'])
+@app.route('/contactos/<int:id>', methods=['DELETE'])
 def delete_contact(id):
     contacto = Contacto.query.get_or_404(id)
 
     db.session.delete(contacto)
     db.session.commit()
     return jsonify({"mensaje": f"Registro '{contacto.nombre}' eliminado exitosamente"}), 200
-
-
-
-
-
 
 
 if __name__ == '__main__':
