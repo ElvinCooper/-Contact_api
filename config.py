@@ -1,4 +1,3 @@
-#import sqlite3
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -10,5 +9,5 @@ class Config:
     # Desactiva el seguimiento de modificaciones de objetos para ahorrar recursos
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Clave secreta para sesiones, JWT, etc.
+    # Clave secreta para sesiones, JWT etc..
     SECRET_KEY = os.environ.get("SECRET_KEY", "12345cooper")
