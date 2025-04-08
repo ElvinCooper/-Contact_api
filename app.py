@@ -1,32 +1,20 @@
 from flask import Flask, request, jsonify
-import re, os
-import sqlite3, requests
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String
-from flask_marshmallow import Marshmallow
-
+from config import Config
+from modelos.contacts import Contacto, db
+import requests
+#from esquemas.contact_schema import ContactoSchema
+from schemas.contact_schema import ContactoSchema
+import config
+from routes.contact_rutes import contacto_bp
 
 app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'mis_contactos.db')
+
+app.config.from_object(Config)
+db.init_app(app)
 
 
-db  = SQLAlchemy(app)
-ma = Marshmallow(app)
-
-
-
-class Contacto(db.Model):
-    __tablename__ = 'mis_contactos'
-    id     = Column(Integer, primary_key=True)
-    nombre = Column(String, nullable=False)
-    email  = Column(String, nullable=False)
-
-# definicion del schema marshmallow    
-class ContactoSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Contacto
-        load_instance = True
+contacto_schema = ContactoSchema()
+contacts_schema = ContactoSchema(many=True)
 
 
 contacto_schema = ContactoSchema()  # esquema para la serializacion de los datos
@@ -45,7 +33,6 @@ def db_drop():
 
 
 # Definicion de los datos a partir del modelo Contacto
-
 @app.cli.command('db.seed')
 def db_seed():
     contacto1 = Contacto(id=None,
@@ -88,19 +75,19 @@ def get_contacto(id):
     contacto_schema = ContactoSchema()
     return jsonify(contacto_schema.dump(contacto))
 
-
-
 #Enpoint para insertar un contacto
 @app.route('/insertar/<string:nombre>/<string:email>', methods=['POST'])
 def put_contact(nombre: str, email: str): 
     data = request.get_json(silent=True)
+    # nombre = request.json.get(nombre)
+    # email  = request.json.get(email) 
 
     if not nombre or not email:
         return jsonify({"Mensaje": "Faltan parametros (nombre y/o email)"}), 400
     
     # Validar formato de email
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-        return jsonify({"Error": "Formato de email inválido"}), 400
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return jsonify({"Error": "Formato de email inválido"}), 400
 
     
     #email = data.get("email")
@@ -113,10 +100,10 @@ def put_contact(nombre: str, email: str):
     db.session.add(nuevo_contacto)
     db.session.commit()
 
-    #contacto_schema = ContactoSchema()
+    contacto_schema = ContactoSchema()
     return jsonify(contacto_schema.dump(nuevo_contacto)), 201
     
-
+    
 
 # Endpoint para actualizar un contacto con su id
 @app.route('/update/<int:id>' , methods=['PUT'])
