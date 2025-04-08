@@ -1,15 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from config import Config
 from modelos.contacts import Contacto, db
-import requests
-#from esquemas.contact_schema import ContactoSchema
 from schemas.contact_schema import ContactoSchema
-import config
 from routes.contact_rutes import contacto_bp
+from extensions import db
+
+
 
 app = Flask(__name__)
-
 app.config.from_object(Config)
+
 db.init_app(app)
 
 

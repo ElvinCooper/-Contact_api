@@ -39,12 +39,12 @@ def get_contactos(id):
 def crear_contacto():
     try:
         json_data = request.get_json()
-        data = contacto_schema.load(json_data)
+        data = contacto_schema.load(json_data, session=db.session)
 
-        if Contacto.query.filter_by(email=data['email']).first():
+        if Contacto.query.filter_by(email=data.email).first():
             return jsonify({"mensaje": "Ya existe un contacto con este email"}), 400
 
-        nuevo_contacto = Contacto(**data)
+        nuevo_contacto = data
         db.session.add(nuevo_contacto)
         db.session.commit()
 
