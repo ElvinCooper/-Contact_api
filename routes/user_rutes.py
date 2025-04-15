@@ -31,10 +31,14 @@ def create_usuario():
           required:
             - username
             - password
+            - email
           properties:
             username:
               type: string
               example: juan123
+            email:
+              type: string
+              example: mario@mail.com  
             password:
               type: string
               example: claveSegura123
@@ -48,17 +52,23 @@ def create_usuario():
         json_data = request.get_json()
         username = json_data.get('username')
         password = json_data.get('password')
+        email    = json_data.get('email')
 
-        # verificar si existe username y password
+        # verificar si existe username, password e email en la solicitud
         if not username or not password:
             return jsonify({"mensaje": "Username y Password son requeridos"}), 400
         
-        # validar el nombre de usuario con la bd
+        # validacion de duplicados
         if Usuario.query.filter_by(username=username).first():
-            return jsonify({"mensaje": "Este usuario ya existe"}), 400
+            return jsonify({"mensaje": "Ya existe un usuario con este username"}), 400
         
-        nuevo_usuario = Usuario( username = username,
-                          password=generate_password_hash(password))
+        if Usuario.query.filter_by(username=email).first():
+            return jsonify({"mensaje": "Ya existe un usuario con este email"}), 400
+        
+        # creacion del usuario
+        nuevo_usuario = Usuario(username = username,
+                                password=generate_password_hash(password),
+                                email=email)
         
                 
         db.session.add(nuevo_usuario)

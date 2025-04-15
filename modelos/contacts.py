@@ -1,6 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Date
-from datetime import datetime
+from sqlalchemy import UniqueConstraint
+from datetime import datetime, timezone
 import uuid
 from extensions import db
 
@@ -9,9 +8,13 @@ class Contacto(db.Model):
     
     id             = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     nombre         = db.Column(db.String(100), nullable=False)
-    email          = db.Column(db.String(120), nullable=False)
+    email          = db.Column(db.String(120), unique=True, nullable=False)
     telefono       = db.Column(db.String(20))
-    fecha_creacion = db.Column(db.DateTime, default=datetime.now)
+    fecha_creacion = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        UniqueConstraint('email', name='uq_usuarios_email'),
+    )
 
     
     def __repr__(self):

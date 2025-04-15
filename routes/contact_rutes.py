@@ -3,9 +3,7 @@ from extensions import db
 from modelos.contacts import Contacto
 from schemas.contact_schema import ContactoSchema
 from marshmallow.exceptions import ValidationError
-from flask_jwt_extended import jwt_required, JWTManager
-from datetime import datetime
-
+from flask_jwt_extended import jwt_required
 
  
 contacto_bp = Blueprint('contactos', __name__)
@@ -110,7 +108,7 @@ def create_contact():
               example: ana@example.com
             telefono:
               type: string
-              example: 123456789
+              example: "123456789"
     responses:
       201:
         description: Contacto creado exitosamente
@@ -173,6 +171,8 @@ def update_contact(id):
             email:
               type: string
               example: nuevo@example.com
+            telefono:
+              example: "826542365"  
     responses:
       200:
         description: Contacto actualizado
@@ -189,8 +189,9 @@ def update_contact(id):
             return jsonify({"mensaje": "No hay datos proveidos"}), 400
         data = contacto_schema.load(json_data, session=db.session, partial=True)        
          
-        contacto.nombre = data.nombre or contacto.nombre
-        contacto.email  = data.email  or contacto.email
+        contacto.nombre   = data.nombre   or contacto.nombre
+        contacto.email    = data.email    or contacto.email
+        contacto.telefono = data.telefono or contacto.telefono
 
         db.session.commit()
         
