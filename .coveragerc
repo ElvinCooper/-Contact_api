@@ -1,0 +1,10 @@
+[run]
+source = 
+    app
+    routes
+    modelos
+omit =
+    */migrations/*
+    */config.py
+    app/cli/*
+    routes/*:194-200

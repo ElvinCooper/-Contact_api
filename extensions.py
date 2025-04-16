@@ -8,8 +8,12 @@ ma  = Marshmallow()
 jwt = JWTManager()
 
 
-def init_jwt(app):
+def init_extensions(app):
+    db.init_app(app)
+    ma.init_app(app)
     jwt.init_app(app)
+
+
 
     # manejador personalizado
     @jwt.unauthorized_loader

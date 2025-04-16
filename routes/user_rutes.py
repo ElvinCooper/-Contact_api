@@ -6,6 +6,7 @@ from extensions import db
 from datetime import timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from marshmallow.exceptions import ValidationError
+from utils.mailer import send_simple_email_message
 
 
 
@@ -19,6 +20,9 @@ usuarios_schema = UserSchema(many=True)
 def create_usuario():
     """
     Registro de usuario
+
+    Este endpoint permite a un usuario registrarse en proveeyendo
+    un username, correo y contraseña.
     ---
     tags:
       - Usuarios
@@ -47,7 +51,7 @@ def create_usuario():
         description: Usuario creado correctamente
       400:
         description: Faltan campos requeridos o el usuario ya existe
-    """
+    """ 
     try:
         json_data = request.get_json()
         username = json_data.get('username')
@@ -74,6 +78,14 @@ def create_usuario():
         db.session.add(nuevo_usuario)
         db.session.commit()
 
+
+        # Logica de envio de correo
+        # send_simple_email_message(
+        #     to_email=email,
+        #     subject='Bienvenido a la api contacto',
+        #     template_name= 'register'
+        # )        
+
         return jsonify(usuario_schema.dump(nuevo_usuario)), 201
     except ValidationError as err:
         return jsonify({"error": err.messages}), 400
@@ -86,6 +98,9 @@ def create_usuario():
 def login():
     """
     Login de usuario
+
+    Este enpoint permite al usuario loguearse para obtener su token
+    y poder acceder a la informacion de los contactos.
     ---
     tags:
       - Usuarios
@@ -133,7 +148,14 @@ def login():
         return jsonify({"mensaje": "Credenciales invalidas"}), 401
     
     # Generar JWT
-    acces_token = create_access_token(identity=usuario.id, expires_delta=timedelta(hours=1))
+    acces_token = create_access_token(identity=usuario.id, expires_delta=timedelta(hours=2))
+
+    # envio de correo 
+    # send_simple_email_message(
+    #       to_email=email,
+    #       subject='Inicio de sesion en la API Contactos',
+    #       template_name= 'login'
+    #   ) 
 
     return jsonify({ "mensaje": "login exitoso",
                      "access_token": acces_token
@@ -148,6 +170,9 @@ def login():
 def obtener_usuario_autenticado():
     """
     Obtener usuario autenticado
+
+    Este endpoint permite un usuario autenticado consultar 
+    la informacion del usuario que esta logueado en ese momento.
     ---
     tags:
       - Usuarios

@@ -44,7 +44,10 @@ pip install -r requirements.txt
 ### 4. Crea el archivo `.env`
 
 ```env
-JWT_SECRET_KEY=tu_clave_secreta
+JWT_SECRET_KEY=tu_clave_secreta_para_jwt
+SECRET_KEY=tu_clave_general
+FLASK_ENV=development
+SQLALCHEMY_DATABASE_URI=sqlite:///mis_contactos.db
 MAILGUN_API_KEY=tu_api_key_mailgun
 MAILGUN_DOMAIN=sandboxXXXX.mailgun.org
 MAILGUN_FROM=Mailgun Sandbox <postmaster@sandboxXXXX.mailgun.org>
@@ -64,7 +67,7 @@ flask db migrate -m "init"
 flask db upgrade
 ```
 
-### Crear la base de datos (opcional comando extra)
+### Crear la base de datos (opcional para desarrollo o testing):
 
 ```bash
 flask db_create
@@ -119,7 +122,7 @@ pytest -v
 ## 🗂 Estructura del proyecto
 
 ```
-/proyecto_api_contact/
+/contact_api/
 ├── app.py
 ├── config.py
 ├── extensions.py
@@ -132,6 +135,17 @@ pytest -v
 ├── .env
 └── requirements.txt
 ```
+
+---
+
+▶️ Ejecutar el servidor
+
+# En modo desarrollo
+flask run --debug
+
+# O ejecutando directamente app.py
+python app.py
+
 
 ---
 

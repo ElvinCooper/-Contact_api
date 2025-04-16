@@ -16,6 +16,6 @@ class Contacto(db.Model):
         UniqueConstraint('email', name='uq_usuarios_email'),
     )
 
-    
+
     def __repr__(self):
-        return f"<Contact {self.name}>"
+        return f"<Contact {self.nombre}>"

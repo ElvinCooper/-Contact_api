@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort, Response
 from extensions import db
 from modelos.contacts import Contacto
 from schemas.contact_schema import ContactoSchema
@@ -16,7 +16,7 @@ contacts_schema = ContactoSchema(many=True)
 @contacto_bp.route('/')
 def index():
     """
-    Bienvenida API de Contactos
+    Bienvenida a la API de Contactos
     ---
     tags:
       - Contactos
@@ -29,11 +29,14 @@ def index():
 
 
 # Enpoint para consultar todos los datos de la tabla de contactos
-@contacto_bp.route('/contactos', methods=['GET'])
+@contacto_bp.route('/contactos', methods=['GET', 'OPTIONS'])
 @jwt_required()
 def listar_contactos():
     """
     Listar todos los contactos
+
+    En este endpoint un usuario autenticado puede listar todos
+    los contactos existentes en la base de datos.
     ---
     tags:
       - Contactos
@@ -43,6 +46,14 @@ def listar_contactos():
       200:
         description: Lista de contactos
     """    
+    if request.method == 'OPTIONS':
+          # Responder a solicitudes preflight de CORS
+          response = Response(status=200)
+          response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+          response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+          response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+          return response
+
     list_contacts = Contacto.query.all()    
     
     return jsonify(contacts_schema.dump(list_contacts))
@@ -55,6 +66,9 @@ def listar_contactos():
 def get_contactos(id):
     """
     Obtener contacto por ID
+
+    Este endpoint permite al usuario obtener los datos de un contacto 
+    por su respectivo ID
     ---
     tags:
       - Contactos
@@ -72,7 +86,9 @@ def get_contactos(id):
       404:
         description: Contacto no encontrado
     """    
-    contacto = Contacto.query.get_or_404(id)
+    contacto = db.session.get(Contacto, id)
+    if not contacto:
+      abort(404, description="Contacto no encontrado")
            
     return jsonify(contacto_schema.dump(contacto)), 200    
 
@@ -83,7 +99,10 @@ def get_contactos(id):
 @jwt_required()
 def create_contact():
     """
-    Crear nuevo contacto
+    Crear nuevo contacto en la base de datos.
+
+    Este endpoint permite a un usuario autenticado crear un nuevo contacto
+    proporcionando nombre, email y teléfono.
     ---
     tags:
       - Contactos
@@ -131,8 +150,7 @@ def create_contact():
         nuevo_contacto = Contacto(
             nombre= nombre,
             email = email,
-            telefono = telefono
-            #fecha_creacion =datetime.now()
+            telefono = telefono            
             )
         db.session.add(nuevo_contacto)
         db.session.commit()
@@ -149,6 +167,9 @@ def create_contact():
 def update_contact(id):
     """
     Actualizar un contacto existente
+
+    Este endpoint permite al usuario autenticado actulizar la informacion
+    de un contacto ya se manera parcial o completa indicando su id.
     ---
     tags:
       - Contactos
@@ -181,7 +202,9 @@ def update_contact(id):
       404:
         description: Contacto no encontrado
     """    
-    contacto = Contacto.query.get_or_404(id)
+    contacto = db.session.get(Contacto, id)
+    if not contacto:
+        abort(404, description="Contacto no encontrado")
 
     try:
         json_data = request.get_json()
@@ -210,6 +233,9 @@ def update_contact(id):
 def delete_contact(id):
     """
     Eliminar un contacto
+
+    Este endpoint permite al usuario autenticado eliminar 
+    a un contacto indicando su id.
     ---
     tags:
       - Contactos
@@ -227,7 +253,9 @@ def delete_contact(id):
       404:
         description: Contacto no encontrado
     """    
-    contacto = Contacto.query.get_or_404(id)
+    contacto = db.session.get(Contacto, id)
+    if not contacto :
+        abort(400, description="Contacto no encontrado")
 
     db.session.delete(contacto)
     db.session.commit()
