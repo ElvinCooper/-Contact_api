@@ -4,7 +4,7 @@ from config import DevelopmentConfig, ProductionConfig, TestingConfig
 from modelos.users import Usuario
 from routes.contact_rutes import contacto_bp
 from routes.user_rutes import usuario_bp
-from extensions import db, init_extensions
+from extensions import db, init_extensions, migrate
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
@@ -75,7 +75,23 @@ def create_app(testing=False):
     app.register_blueprint(usuario_bp , url_prefix='/api')
 
 
-    # Comando para crear la base de datos
+    
+
+    return app
+
+app = create_app()
+
+@app.before_first_request
+def create_database():
+    try:
+        with app.app_context():
+            db.create_all()
+            print("Tablas de la base de datos creadas (al recibir la primera solicitud).")
+    except Exception as e:
+        print(f"Error al crear la base de datos: {e}")
+
+
+# Comando para crear la base de datos
     @app.cli.command('db_create')
     def db_create():
         with app.app_context():
@@ -96,24 +112,16 @@ def create_app(testing=False):
     def db_seed():
         with app.app_context():
             usuario = Usuario(id=None,
-                            username='Elvin',
-                            password='elvin123',
+                            username='Admin',
+                            password='admin123',
                             email="ing.elvin01cooper@gmail.com")       
 
             db.session.add(usuario)
             db.session.commit()
             print(f'Base de datos creada y poblada')
 
-    return app
-
-
-app = create_app()
 
 
 if __name__ == '__main__':
-    app = create_app()
-    with app.app_context():  # Agregamos esto para asegurar el contexto de la app
-        db.create_all()  # Creamos las tablas
-        print("Tablas de la base de datos creadas.")
     app.run(debug=True)
 
