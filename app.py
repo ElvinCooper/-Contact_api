@@ -75,50 +75,40 @@ def create_app(testing=False):
     app.register_blueprint(usuario_bp , url_prefix='/api')
 
 
-    
-
     return app
 
 app = create_app()
 
-@app.before_first_request
-def create_database():
-    try:
-        with app.app_context():
-            db.create_all()
-            print("Tablas de la base de datos creadas (al recibir la primera solicitud).")
-    except Exception as e:
-        print(f"Error al crear la base de datos: {e}")
-
 
 # Comando para crear la base de datos
-    @app.cli.command('db_create')
-    def db_create():
-        with app.app_context():
-            db.create_all()
-            print('Base de datos creada exitosamente !')
-
-    
-    # comando para eliminar la base de datos
-    @app.cli.command('db_drop')
-    def db_drop():
-        with app.app_context():
-            db.drop_all()
-            print('Base de datos eliminada')
+@app.cli.command('db_create')
+def db_create():
+    with app.app_context():
+        db.create_all()
+        print('Base de datos creada exitosamente !')
 
 
-    # comando para insertar datos iniciales
-    @app.cli.command('db.seed')
-    def db_seed():
-        with app.app_context():
-            usuario = Usuario(id=None,
-                            username='Admin',
-                            password='admin123',
-                            email="ing.elvin01cooper@gmail.com")       
+# comando para eliminar la base de datos
+@app.cli.command('db_drop')
+def db_drop():
+    with app.app_context():
+        db.drop_all()
+        print('Base de datos eliminada')
 
-            db.session.add(usuario)
-            db.session.commit()
-            print(f'Base de datos creada y poblada')
+
+# comando para insertar datos iniciales
+@app.cli.command('db.seed')
+def db_seed():
+    with app.app_context():
+        usuario = Usuario(id=None,
+                        username='Admin',
+                        password='admin123',
+                        email="ing.elvin01cooper@gmail.com")       
+
+        db.session.add(usuario)
+        db.session.commit()
+        print(f'Base de datos creada y poblada')
+
 
 
 
