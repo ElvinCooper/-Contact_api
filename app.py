@@ -17,6 +17,7 @@ def create_app(testing=False):
 
     app = Flask(__name__)
     load_dotenv()
+    
 
     # detectar el entorno desde .FLASKENV
     env = os.getenv("FLASK_ENV", "development")
@@ -25,6 +26,7 @@ def create_app(testing=False):
         app.config.from_object(TestingConfig)
     elif env == "production":    
         app.config.from_object(ProductionConfig)
+        
     else:
         app.config.from_object(DevelopmentConfig) 
 
@@ -45,7 +47,7 @@ def create_app(testing=False):
 
     # Iniciando las extensiones
     init_extensions(app)
-    Migrate(app, db) 
+    migrate = Migrate(app, db) 
    
     # Swagger
     swagger_template = {
@@ -110,5 +112,8 @@ app = create_app()
 
 if __name__ == '__main__':
     app = create_app()
+    with app.app_context():  # Agregamos esto para asegurar el contexto de la app
+        db.create_all()  # Creamos las tablas
+        print("Tablas de la base de datos creadas.")
     app.run(debug=True)
 

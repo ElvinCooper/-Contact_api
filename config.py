@@ -10,7 +10,7 @@ class BaseConfig:
     API_TITLE = "Contacts API"
     API_VERSION = "v1"
     OPENAPI_URL_PREFIX = "/"
-
+ 
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
