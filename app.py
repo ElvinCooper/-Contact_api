@@ -77,7 +77,13 @@ def create_app(testing=False):
 
     return app
 
+
 app = create_app()
+
+
+with app.app_context():
+    db.create_all()
+    print("Intentando crear la base de datos al inicio de la aplicación.")
 
 
 # Comando para crear la base de datos
