@@ -80,11 +80,11 @@ def create_usuario():
 
 
         # Logica de envio de correo
-        # send_simple_email_message(
-        #     to_email=email,
-        #     subject='Bienvenido a la api contacto',
-        #     template_name= 'register'
-        # )        
+        send_simple_email_message(
+            to_email=email,
+           subject='Bienvenido a la api contacto',
+           template_name= 'register'
+       )        
 
         return jsonify(usuario_schema.dump(nuevo_usuario)), 201
     except ValidationError as err:
@@ -151,11 +151,11 @@ def login():
     acces_token = create_access_token(identity=usuario.id, expires_delta=timedelta(hours=2))
 
     # envio de correo 
-    # send_simple_email_message(
-    #       to_email=email,
-    #       subject='Inicio de sesion en la API Contactos',
-    #       template_name= 'login'
-    #   ) 
+    send_simple_email_message(
+           to_email=usuario.email,
+           subject='Inicio de sesion en la API Contactos',
+           template_name= 'login'
+      ) 
 
     return jsonify({ "mensaje": "login exitoso",
                      "access_token": acces_token
