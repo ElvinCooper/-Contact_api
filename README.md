@@ -51,6 +51,7 @@ SQLALCHEMY_DATABASE_URI=sqlite:///mis_contactos.db
 MAILGUN_API_KEY=tu_api_key_mailgun
 MAILGUN_DOMAIN=sandboxXXXX.mailgun.org
 MAILGUN_FROM=Mailgun Sandbox <postmaster@sandboxXXXX.mailgun.org>
+FRONTEND_URL= 
 ```
 
 > ⚠️ Si no usarás correos, puedes dejar los campos vacíos temporalmente.
@@ -102,7 +103,7 @@ Bearer (espacio) + (tu token)
 Accede a la documentación interactiva en:
 
 ```
-http://localhost:5000/apidocs
+https://contact-api-8rpp.onrender.com/apidocs
 ```
 
 Desde ahí puedes probar todos los endpoints directamente.
