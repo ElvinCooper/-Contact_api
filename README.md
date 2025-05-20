@@ -1,29 +1,50 @@
-# 📇 API REST - Contactos
+# 📇 API de Contactos con Flask
 
-Una API RESTful para gestionar contactos, desarrollada con **Flask**, **JWT**, **SQLAlchemy**, **Swagger** y más.
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
+![Flask](https://img.shields.io/badge/Flask-2.x-green?logo=flask)
+![License](https://img.shields.io/github/license/ElvinCooper/-Contact_api)
 
----
-
-## 🚀 Funcionalidades principales
-
-- Registro y login de usuarios con tokens JWT
-- Gestión de contactos (crear, listar, actualizar, eliminar)
-- Protección de rutas con autenticación
-- Documentación interactiva con Swagger
-- Envío de correos al registrarse o iniciar sesión (Mailgun, opcional)
-- Estructura profesional usando Blueprints y Marshmallow
-- Pruebas automatizadas con Pytest
+Una API RESTful para la gestión de contactos, desarrollada con **Flask**, **JWT**, **SQLAlchemy**, **Swagger**, **Marshmallow** y más.
 
 ---
 
-## 🛠️ Instalación local
+## 🧭 Tabla de Contenido
 
-### 1. Clona el proyecto
+- [🚀 Funcionalidades](#-funcionalidades)
+- [🛠️ Instalación](#️-instalación)
+- [🔐 Rutas protegidas](#-rutas-protegidas)
+- [📚 Documentación Swagger](#-documentación-swagger)
+- [🧪 Pruebas con Pytest](#-pruebas-con-pytest)
+- [🗂 Estructura del proyecto](#-estructura-del-proyecto)
+- [📦 Requisitos](#-requisitos)
+- [🤝 Contribuciones](#-contribuciones)
+
+---
+
+## 🚀 Funcionalidades
+
+- 🧾 Registro y login de usuarios con **JWT**
+- 📇 CRUD completo para contactos
+- 🔐 Rutas protegidas mediante autenticación
+- 📚 Documentación interactiva con **Swagger**
+- 📨 Envío de correos al registrarse o iniciar sesión (opcional con Mailgun)
+- 🧪 Pruebas automatizadas con **Pytest**
+- 📁 Estructura modular con **Blueprints** y validación con **Marshmallow**
+
+---
+
+## 🛠️ Instalación
+
+1. Clona el repositorio:
 
 ```bash
 git clone https://github.com/ElvinCooper/-Contact_api.git
-cd tu-repo
-```
+cd -Contact_api
+python -m venv venv
+# En Windows
+venv\Scripts\activate
+# En Linux/macOS
+source venv/bin/activate
 
 ### 2. Crea un entorno virtual
 
